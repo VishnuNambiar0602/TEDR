@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  tedr-api:
+    build: .
+    container_name: tedr-object-detection
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./checkpoints:/app/checkpoints
+    environment:
+      - DEVICE=cpu  # Change to 'cuda' if GPU available
+    restart: unless-stopped
