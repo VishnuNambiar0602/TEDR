@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEDR - Transformer Object Detection for Indian Roads</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">
+                <i class="fas fa-car"></i> TEDR
+            </h1>
+            <p class="tagline">AI-Powered Object Detection for Indian Roads</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            
+            <!-- Upload Section -->
+            <section id="upload-section" class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Image
+                </h2>
+                
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <h3>Drag & Drop your image here</h3>
+                    <p>or click to browse</p>
+                    <p class="upload-formats">Supported: JPG, PNG, JPEG, WebP (Max 10MB)</p>
+                    <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.webp" hidden>
+                </div>
+                
+                <!-- Image Preview -->
+                <div id="preview-section" class="preview-section hidden">
+                    <h3 class="preview-title">Preview</h3>
+                    <div class="preview-container">
+                        <img id="preview-image" src="" alt="Preview">
+                        <button class="btn-remove" id="remove-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" id="detect-btn">
+                        <i class="fas fa-search"></i> Detect Objects
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Loading Section -->
+            <section id="loading-section" class="card hidden">
+                <div class="loading-container">
+                    <div class="spinner"></div>
+                    <h3>AI is analyzing your image...</h3>
+                    <p>Please wait while we detect objects</p>
+                </div>
+            </section>
+            
+            <!-- Results Section -->
+            <section id="results-section" class="card hidden">
+                <h2 class="section-title">
+                    <i class="fas fa-check-circle"></i> Detection Results
+                </h2>
+                
+                <!-- Statistics -->
+                <div class="stats-container" id="stats-container">
+                    <!-- Stats will be inserted here dynamically -->
+                </div>
+                
+                <!-- Annotated Image -->
+                <div class="results-image-container">
+                    <img id="result-image" src="" alt="Detection Results">
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="download-btn">
+                        <i class="fas fa-download"></i> Download Result
+                    </button>
+                    <button class="btn btn-primary" id="upload-another-btn">
+                        <i class="fas fa-upload"></i> Upload Another
+                    </button>
+                </div>
+                
+                <!-- Detailed Detections -->
+                <div class="detections-details" id="detections-details">
+                    <!-- Detection details will be inserted here -->
+                </div>
+            </section>
+            
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 TEDR - Transformer-based Object Detection for Indian Roads</p>
+            <p class="footer-links">
+                <a href="#"><i class="fab fa-github"></i> GitHub</a>
+                <a href="#"><i class="fas fa-book"></i> Documentation</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <i class="fas fa-info-circle"></i>
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
