@@ -19,38 +19,55 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Virtual Environment
 venv/
-env/
 ENV/
+env/
 .venv
 
-# IDE
-.vscode/
+# PyCharm
 .idea/
-*.swp
-*.swo
-*~
+
+# VS Code
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Model checkpoints
-checkpoints/
-*.pth
-*.pt
-*.ckpt
-
-# Data
-data/datasets/*
-!data/datasets/.gitkeep
-data/sample_images/*.jpg
-data/sample_images/*.png
-!data/sample_images/.gitkeep
+# Project specific
+app/static/uploads/*
+!app/static/uploads/.gitkeep
 
 # Logs
 *.log
 logs/
 wandb/
+
+# Flask
+instance/
+.webassets-cache
+
+# Model files (optional - uncomment if you want to exclude downloaded models)
+# models/
+# *.pt
+# *.pth
+# *.bin
 
 # Testing
 .pytest_cache/
@@ -70,6 +87,3 @@ htmlcov/
 tmp/
 temp/
 *.tmp
-
-# OS
-Thumbs.db
