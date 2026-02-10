@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple validation script to check if the TEDR system is properly configured.
+Simple validation script to check if the TEDR (Transformer-based Object Detection 
+for Indian Roads) system is properly configured.
 Run this after installing dependencies to verify the setup.
 """
 

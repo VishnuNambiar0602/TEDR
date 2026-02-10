@@ -21,4 +21,8 @@ if __name__ == '__main__':
     print("Open your browser and navigate to: http://localhost:5000")
     print("\nPress CTRL+C to stop the server\n")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Debug mode is disabled for security
+    # For development debugging, set debug=True
+    # For production, use a WSGI server like Gunicorn:
+    #   gunicorn -w 4 -b 0.0.0.0:5000 run:app
+    app.run(debug=False, host='0.0.0.0', port=5000)

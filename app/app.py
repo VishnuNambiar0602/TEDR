@@ -133,4 +133,7 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Debug mode is disabled for security
+    # For development debugging, set debug=True
+    # For production, use a WSGI server like Gunicorn (see requirements.txt)
+    app.run(debug=False, host='0.0.0.0', port=5000)

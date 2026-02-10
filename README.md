@@ -406,6 +406,30 @@ pip install -r requirements.txt
 **5. Slow Detection on CPU**
 **Solution**: This is expected. GPU acceleration is recommended for real-time performance. Consider using Google Colab or cloud services with GPU support.
 
+### Production Deployment
+
+For production environments, use a WSGI server like Gunicorn instead of Flask's built-in server:
+
+**Using Gunicorn (included in requirements.txt):**
+```bash
+# Single worker
+gunicorn -w 1 -b 0.0.0.0:5000 run:app
+
+# Multiple workers (recommended for CPU-bound tasks)
+gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 run:app
+
+# With access logging
+gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 --access-logfile - run:app
+```
+
+**Important Production Notes:**
+- Debug mode is disabled by default in `run.py` for security
+- Set `--timeout` high enough for model inference (default 30s may be too short)
+- Use environment variables for sensitive configuration
+- Consider using nginx as a reverse proxy
+- Implement rate limiting for API endpoints
+- Add authentication if deploying publicly
+
 ### Performance Tips
 
 - **Use GPU**: Detection is 10-50x faster on GPU
