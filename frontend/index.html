@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEDR - Object Detection for Indian Roads</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 TEDR</h1>
+            <p class="subtitle">Transformer-based Object Detection for Indian Roads</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <div class="upload-box" id="uploadBox">
+                    <div class="upload-content">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <h2>Upload Image</h2>
+                        <p>Drag & drop an image here or click to browse</p>
+                        <p class="file-types">Supports: JPEG, PNG</p>
+                        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/jpg" hidden>
+                        <button class="btn-primary" id="browseBtn">Browse Files</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h2>Detection Results</h2>
+                    <button class="btn-secondary" id="newImageBtn">Upload New Image</button>
+                </div>
+
+                <div class="image-container">
+                    <canvas id="resultCanvas"></canvas>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="objectCount">0</div>
+                        <div class="stat-label">Objects Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="processingTime">0s</div>
+                        <div class="stat-label">Processing Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="imageSize">0x0</div>
+                        <div class="stat-label">Image Size</div>
+                    </div>
+                </div>
+
+                <div class="detections-list" id="detectionsList">
+                    <!-- Detection items will be inserted here -->
+                </div>
+            </div>
+
+            <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing image...</p>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by DETR (DEtection TRansformer) • Optimized for Indian Road Scenarios</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

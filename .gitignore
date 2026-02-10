@@ -57,6 +57,7 @@ app/static/uploads/*
 # Logs
 *.log
 logs/
+wandb/
 
 # Flask
 instance/
@@ -72,6 +73,15 @@ instance/
 .pytest_cache/
 .coverage
 htmlcov/
+.tox/
+
+# Environment
+.env
+.env.local
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
 
 # Temporary files
 tmp/
