@@ -212,9 +212,20 @@ def create_comparison_grid(
         # Add title if provided
         if titles and idx < len(titles):
             draw = ImageDraw.Draw(grid)
-            try:
-                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
-            except:
+            # Try multiple font paths for cross-platform compatibility
+            font_paths = [
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
+                "/System/Library/Fonts/Helvetica.ttc",  # macOS
+                "C:\\Windows\\Fonts\\arial.ttf",  # Windows
+            ]
+            font = None
+            for font_path in font_paths:
+                try:
+                    font = ImageFont.truetype(font_path, 20)
+                    break
+                except:
+                    continue
+            if font is None:
                 font = ImageFont.load_default()
             draw.text((x + 10, y + 10), titles[idx], fill=(0, 0, 0), font=font)
     
