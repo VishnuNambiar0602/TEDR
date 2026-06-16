@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Monitor - TrafficAI</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .monitor-card {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-idle {
+            background: rgba(100, 100, 100, 0.3);
+            color: #ccc;
+        }
+
+        .status-running {
+            background: rgba(0, 255, 255, 0.2);
+            color: #0ff;
+            animation: pulse 2s infinite;
+        }
+
+        .status-finished {
+            background: rgba(0, 255, 0, 0.2);
+            color: #0f0;
+        }
+
+        .status-failed {
+            background: rgba(255, 0, 0, 0.2);
+            color: #f00;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-label {
+            display: block;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4f46e5, #06b6d4);
+            transition: width 0.5s ease;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            }
+
+            100% {
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Model Training</h1>
+            <p>Indian Traffic Dataset</p>
+            <a href="/" style="color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.9rem;">← Back to
+                Analyzer</a>
+        </header>
+
+        <main>
+            <div class="glass-card monitor-card">
+                <div class="monitor-header">
+                    <h3>Training Progress</h3>
+                    <div id="status-badge" class="status-badge status-idle">IDLE</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">Epoch</span>
+                        <div class="metric-value" id="epoch-val">0/10</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">mAP50</span>
+                        <div class="metric-value" id="map-val">0.00</div>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Box Loss</span>
+                        <div class="metric-value" id="loss-val">0.00</div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="metric-label" style="text-align: left; margin-bottom: 5px;">Overall Progress</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn-reset btn-start" id="start-btn" onclick="startTraining()">Start Training</button>
+                    <button class="btn-reset btn-stop" id="stop-btn" onclick="stopTraining()" disabled>Stop</button>
+                </div>
+
+                <div id="message-area"
+                    style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.7); min-height: 1.5em;">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        let pollInterval = null;
+
+        async function startTraining() {
+            try {
+                const res = await fetch(`${API_URL}/start_training`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showMessage("Training initiated...");
+                    startPolling();
+                } else {
+                    showMessage("Error: " + data.message);
+                }
+            } catch (e) {
+                showMessage("Connection Error: " + e.message);
+            }
+        }
+
+        async function stopTraining() {
+            try {
+                const res = await fetch(`${API_URL}/stop_training`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showMessage("Stopping training...");
+                }
+            } catch (e) {
+                showMessage("Error: " + e.message);
+            }
+        }
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(updateStatus, 1000);
+            updateStatus(); // Immediate update
+        }
+
+        async function updateStatus() {
+            try {
+                const res = await fetch(`${API_URL}/training_status`);
+                const data = await res.json();
+
+                // Update UI
+                const statusBadge = document.getElementById('status-badge');
+                const startBtn = document.getElementById('start-btn');
+                const stopBtn = document.getElementById('stop-btn');
+                const progressBar = document.getElementById('progress-fill');
+
+                statusBadge.textContent = data.status.toUpperCase();
+                statusBadge.className = `status-badge status-${data.status.toLowerCase()}`;
+
+                if (data.status === "Training" || data.status === "Starting") {
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    statusBadge.classList.add('status-running');
+                } else {
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    statusBadge.classList.remove('status-running');
+                    if (data.status === "Finished" || data.status === "Stopped" || data.status === "Failed") {
+                        // Maybe stop polling after some time, but keeping it ensures we see if it restarts
+                    }
+                }
+
+                // Update Metrics
+                const epoch = data.epoch || 0;
+                const totalEpochs = 10; // Hardcoded in train_model.py
+                document.getElementById('epoch-val').textContent = `${epoch}/${totalEpochs}`;
+
+                if (data.metrics) {
+                    document.getElementById('map-val').textContent = (data.metrics.mAP50 || 0).toFixed(4);
+                    document.getElementById('loss-val').textContent = (data.metrics.box_loss || 0).toFixed(4);
+                }
+
+                // Progress Bar
+                const progress = (epoch / totalEpochs) * 100;
+                progressBar.style.width = `${progress}%`;
+
+            } catch (e) {
+                console.error("Polling error", e);
+            }
+        }
+
+        function showMessage(msg) {
+            document.getElementById('message-area').textContent = msg;
+        }
+
+        // Initial check on load
+        startPolling();
+    </script>
+</body>
+
+</html>

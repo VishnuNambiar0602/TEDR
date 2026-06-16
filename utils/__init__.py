@@ -1,1 +1,0 @@
-"""TEDR Utilities Module."""

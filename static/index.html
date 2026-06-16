@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Congestion Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>TrafficAI</h1>
+            <p>Advanced Congestion Analysis System</p>
+            <a href="/static/monitor.html"
+                style="display: block; margin-top: 10px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9em; border: 1px solid rgba(255,255,255,0.3); padding: 5px 15px; border-radius: 20px; width: fit-content; margin-left: auto; margin-right: auto;">
+                Manager Training Status
+            </a>
+        </header>
+
+        <main>
+            <div class="upload-section" id="upload-section">
+                <div class="glass-card upload-card">
+                    <div class="mode-switch" id="mode-switch">
+                        <button class="mode-btn active" id="mode-image" data-mode="image" type="button">Image</button>
+                        <button class="mode-btn" id="mode-video" data-mode="video" type="button">Video</button>
+                    </div>
+                    <div class="video-options hidden" id="video-options" style="flex-direction: column; align-items: stretch; gap: 0.8rem; width: 100%; max-width: 250px;">
+                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; width: 100%;">
+                            <label for="processing-mode" style="font-weight: 600; font-size: 0.85rem; color: #94a3b8;">Processing Mode</label>
+                            <select id="processing-mode" style="width: 100%; padding: 0.45rem 0.6rem; border-radius: 0.5rem; border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.06); color: var(--text-color); font-family: inherit; font-size: 0.9rem; cursor: pointer;">
+                                <option value="sync" selected>Analyze Every Frame (No Skip)</option>
+                                <option value="live">Live Camera Feed (Drop Frames)</option>
+                            </select>
+                        </div>
+                        <div id="frame-skip-container" class="hidden" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; width: 100%;">
+                            <label for="frame-skip" style="font-weight: 600; font-size: 0.85rem; color: #94a3b8;">Frame Skip</label>
+                            <input type="number" id="frame-skip" min="1" value="2" style="width: 100%; box-sizing: border-box; padding: 0.45rem 0.6rem; border-radius: 0.5rem; border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.06); color: var(--text-color); font-family: inherit; font-size: 0.9rem;">
+                        </div>
+                    </div>
+                    <input type="file" id="file-input" accept="image/*,video/*" hidden>
+                    <div class="upload-content" id="upload-trigger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="upload-icon">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <h3 id="upload-title">Upload Traffic Image</h3>
+                        <p id="upload-hint">Drag & drop or click to browse</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading-section hidden" id="loading-section">
+                <div class="loader"></div>
+                <p id="loading-text">Analyzing Traffic Patterns...</p>
+            </div>
+
+            <div class="result-section hidden" id="result-section">
+                <div class="glass-card result-card">
+                    <div class="image-container" id="result-media-container">
+                        <img id="result-image" src="" alt="Analyzed Traffic">
+                        <video id="result-video" class="hidden" controls></video>
+                        <canvas id="result-canvas" class="hidden" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5;"></canvas>
+                        <div class="badge" id="congestion-badge">HIGH</div>
+                    </div>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-label">Model status</span>
+                            <span class="stat-value">Active</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Vehicle Count</span>
+                            <span class="stat-value" id="vehicle-count">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Occupancy</span>
+                            <span class="stat-value" id="occupancy-ratio">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Congestion</span>
+                            <span class="stat-value" id="congestion-level">-</span>
+                        </div>
+                        <div class="stat-item hidden" id="frames-stat">
+                            <span class="stat-label">Frames analyzed</span>
+                            <span class="stat-value" id="analyzed-frames">-</span>
+                        </div>
+                    </div>
+                    <a class="btn-download hidden" id="download-video-btn" href="#" download>Download Processed Video</a>
+                    <button class="btn-reset" id="reset-btn">Analyze Another</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>

@@ -4,6 +4,13 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
+venv/
+ENV/
+.venv/
+.env
+
+# Build and Packaging
 build/
 develop-eggs/
 dist/
@@ -21,69 +28,45 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual Environment
-venv/
-ENV/
-env/
-.venv
-
-# PyCharm
-.idea/
-
-# VS Code
+# IDE
 .vscode/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# Environments
-.env
-.env.local
-.env.*.local
-
-# OS
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Project specific
-app/static/uploads/*
-!app/static/uploads/.gitkeep
-
-# Logs
-*.log
-logs/
-wandb/
-
-# Flask
-instance/
-.webassets-cache
-
-# Model files (optional - uncomment if you want to exclude downloaded models)
-# models/
-# *.pt
-# *.pth
-# *.bin
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# Environment
-.env
-.env.local
 
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
 
-# Temporary files
-tmp/
+# Data and Models
+data/
+temp_data_backup/
 temp/
+results/
+runs/
+*.log
 *.tmp
+*.temp
+.cache/
+
+# Keep the small weights and test data
+!test_data/
+!*.pt
+
+# OS
+Thumbs.db
+
+# Application specific
+custom_weights/
+uploads/
+output/
+
+# Large model weights (>100MB) and temporary shards
+rtdetr-x.pt
+shards/
+**/shards/
+RT-DETR-L/rtdetr-l.pt
+RT-DETR-X/rtdetr-x.pt
+*.cache

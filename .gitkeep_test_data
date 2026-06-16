@@ -1,0 +1,5 @@
+# This file ensures test_data and trained models are tracked by Git
+# The .gitignore file has been configured to include:
+# - test_data/ (entire directory for datasets)
+# - runs/detect/indian_traffic_model/weights/best.pt (trained model)
+# - runs/detect/indian_traffic_model/weights/last.pt (checkpoint)
