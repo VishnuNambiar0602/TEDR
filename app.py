@@ -13,6 +13,15 @@ from analyzer import TrafficAnalyzer
 
 app = FastAPI()
 
+# Add CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -115,22 +124,21 @@ async def analyze_video(file: UploadFile = File(...), frame_skip: int = Form(1))
         cumulative_occupancy = 0.0
         congestion_counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0}
 
+        analyzer.reset()
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
 
             total_frames += 1
-            if frame_index % frame_skip == 0:
-                result = analyzer.analyze_frame(frame)
-                out_frame = result["processed_image"]
-                analyzed_frames += 1
-                cumulative_vehicle_count += result["vehicle_count"]
-                cumulative_occupancy += result["occupancy_ratio"]
-                if result["congestion_level"] in congestion_counts:
-                    congestion_counts[result["congestion_level"]] += 1
-            else:
-                out_frame = frame
+            # Enable adaptive temporal tracking if frame_skip > 1
+            result = analyzer.analyze_frame(frame, frame_skip=frame_skip, adaptive=(frame_skip > 1))
+            out_frame = result["processed_image"]
+            analyzed_frames += 1
+            cumulative_vehicle_count += result["vehicle_count"]
+            cumulative_occupancy += result["occupancy_ratio"]
+            if result["congestion_level"] in congestion_counts:
+                congestion_counts[result["congestion_level"]] += 1
 
             writer.write(out_frame)
             frame_index += 1
@@ -177,31 +185,39 @@ async def download_video(video_name: str):
 
 @app.post("/upload_video")
 async def upload_video(file: UploadFile = File(...)):
-    allowed_ext = {".mp4", ".avi", ".mov", ".mkv"}
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in allowed_ext:
-        return JSONResponse({"success": False, "error": "Unsupported video format. Use .mp4, .avi, .mov, or .mkv"}, status_code=400)
-    
-    video_id = uuid.uuid4().hex
-    input_name = f"{video_id}{ext}"
-    input_path = os.path.join("temp", input_name)
-    
-    with open(input_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        allowed_ext = {".mp4", ".avi", ".mov", ".mkv"}
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in allowed_ext:
+            return JSONResponse({"success": False, "error": "Unsupported video format. Use .mp4, .avi, .mov, or .mkv"}, status_code=400)
         
-    cap = cv2.VideoCapture(input_path)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    cap.release()
-    
-    return JSONResponse({
-        "success": True,
-        "video_id": video_id,
-        "filename": input_name,
-        "total_frames": total_frames
-    })
+        video_id = uuid.uuid4().hex
+        input_name = f"{video_id}{ext}"
+        input_path = os.path.join("temp", input_name)
+        
+        with open(input_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        cap = cv2.VideoCapture(input_path)
+        if not cap.isOpened():
+            raise ValueError("Could not open uploaded video")
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
+        
+        return JSONResponse({
+            "success": True,
+            "video_id": video_id,
+            "filename": input_name,
+            "total_frames": total_frames
+        })
+    except Exception as e:
+        return JSONResponse({
+            "success": False,
+            "error": str(e)
+        }, status_code=500)
 
-def process_and_encode_frame(frame, analyzer):
-    result = analyzer.analyze_frame(frame)
+def process_and_encode_frame(frame, analyzer, frame_skip=1, adaptive=False):
+    result = analyzer.analyze_frame(frame, frame_skip=frame_skip, adaptive=adaptive)
     _, buffer = cv2.imencode('.jpg', result["processed_image"])
     img_base64 = base64.b64encode(buffer).decode('utf-8')
     return {
@@ -260,40 +276,38 @@ async def websocket_process_video(websocket: WebSocket, video_id: str, frame_ski
         frame_duration = 1.0 / fps
         import time
         
+        analyzer.reset()
+        
         while cap.isOpened():
             start_time = time.time()
             ret, frame = cap.read()
             if not ret:
                 break
                 
-            out_frame = frame
+            # Call process_and_encode_frame on every frame to support smooth tracking visualization
+            use_adaptive = (frame_skip > 1)
+            res = await asyncio.to_thread(process_and_encode_frame, frame, analyzer, frame_skip, use_adaptive)
+            out_frame = res["processed_image"]
+            analyzed_frames += 1
+            cumulative_vehicle_count += res["vehicle_count"]
+            cumulative_occupancy += res["occupancy_ratio"]
+            congestion = res["congestion_level"]
+            congestion_counts[congestion] += 1
             
-            if frame_index % frame_skip == 0:
-                # Offload CPU/GPU intensive work to background thread
-                res = await asyncio.to_thread(process_and_encode_frame, frame, analyzer)
-                out_frame = res["processed_image"]
-                analyzed_frames += 1
-                cumulative_vehicle_count += res["vehicle_count"]
-                cumulative_occupancy += res["occupancy_ratio"]
-                congestion = res["congestion_level"]
-                congestion_counts[congestion] += 1
-                
-                await websocket.send_json({
-                    "type": "frame",
-                    "frame": res["frame"],
-                    "vehicle_count": res["vehicle_count"],
-                    "occupancy_ratio": res["occupancy_ratio"],
-                    "congestion_level": congestion,
-                    "frame_index": frame_index,
-                    "total_frames": total_frames
-                })
-                
-                # Calculate processing time and sleep to match native video frame rate pacing
-                elapsed = time.time() - start_time
-                sleep_time = max(0.001, (frame_duration * frame_skip) - elapsed)
-                await asyncio.sleep(sleep_time)
-            else:
-                pass
+            await websocket.send_json({
+                "type": "frame",
+                "frame": res["frame"],
+                "vehicle_count": res["vehicle_count"],
+                "occupancy_ratio": res["occupancy_ratio"],
+                "congestion_level": congestion,
+                "frame_index": frame_index,
+                "total_frames": total_frames
+            })
+            
+            # Pacing matches native single frame duration now since we process every frame
+            elapsed = time.time() - start_time
+            sleep_time = max(0.001, frame_duration - elapsed)
+            await asyncio.sleep(sleep_time)
                 
             writer.write(out_frame)
             frame_index += 1
@@ -339,16 +353,20 @@ async def websocket_process_video(websocket: WebSocket, video_id: str, frame_ski
 @app.websocket("/ws/detect_frame")
 async def websocket_detect_frame(websocket: WebSocket):
     await websocket.accept()
+    print("[WS] Real-time frame detection WebSocket client connected")
     try:
+        frame_count = 0
         while True:
             # Receive binary frame (JPEG bytes)
             data = await websocket.receive_bytes()
+            frame_count += 1
             
             # Decode JPEG
             nparr = np.frombuffer(data, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
             if img is None:
+                print(f"[WS] Error decoding frame {frame_count}")
                 await websocket.send_json({"error": "Invalid image data"})
                 continue
                 
@@ -389,6 +407,8 @@ async def websocket_detect_frame(websocket: WebSocket):
             else:
                 congestion_level = "HIGH"
                 
+            print(f"[WS] Frame {frame_count}: Detected {len(detections)} vehicles. Occupancy: {occupancy_ratio:.3f}. Congestion: {congestion_level}")
+            
             # Send results back
             await websocket.send_json({
                 "detections": detections,
@@ -400,9 +420,9 @@ async def websocket_detect_frame(websocket: WebSocket):
             })
             
     except WebSocketDisconnect:
-        print("Real-time frame detection WebSocket disconnected")
+        print("[WS] Real-time frame detection WebSocket client disconnected")
     except Exception as e:
-        print(f"Error in real-time frame detection: {e}")
+        print(f"[WS] Error in real-time frame detection: {e}")
 
 import subprocess
 import json

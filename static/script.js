@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultVideo = document.getElementById('result-video');
     const resultCanvas = document.getElementById('result-canvas');
     const downloadVideoBtn = document.getElementById('download-video-btn');
+    const downloadReportBtn = document.getElementById('download-report-btn');
     const framesStat = document.getElementById('frames-stat');
     const analyzedFrames = document.getElementById('analyzed-frames');
     const vehicleCount = document.getElementById('vehicle-count');
@@ -122,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (file.type.startsWith('video/')) {
-            uploadAndAnalyzeVideo(file);
+            playAndAnalyzeVideoLocally(file);
         } else {
             alert('Please upload a video file.');
         }
@@ -240,6 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 downloadVideoBtn.href = msg.download_url;
                 downloadVideoBtn.classList.remove('hidden');
                 
+                downloadReportBtn.href = generateReport(msg, 'video');
+                downloadReportBtn.classList.remove('hidden');
+                
                 ws.close();
             } else if (msg.type === 'error') {
                 alert('Error processing video: ' + msg.message);
@@ -252,6 +256,52 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Connection lost during processing.');
             resetView();
         };
+    }
+
+    function generateReport(data, type) {
+        let tableRows = '';
+        if (type === 'image') {
+            tableRows = `
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Vehicle Count</td><td>${data.vehicle_count}</td></tr>
+                <tr><td>Occupancy Ratio</td><td>${(data.occupancy_ratio * 100).toFixed(1)}%</td></tr>
+                <tr><td>Congestion Level</td><td>${data.congestion_level}</td></tr>
+            `;
+        } else {
+            tableRows = `
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Average Vehicle Count</td><td>${data.average_vehicle_count}</td></tr>
+                <tr><td>Average Occupancy Ratio</td><td>${(data.average_occupancy_ratio * 100).toFixed(1)}%</td></tr>
+                <tr><td>Dominant Congestion Level</td><td>${data.congestion_level || data.dominant_congestion}</td></tr>
+                <tr><td>Analyzed Frames</td><td>${data.analyzed_frames} / ${data.total_frames}</td></tr>
+            `;
+        }
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Traffic Analysis Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 40px; margin: 0; }
+                    h1 { text-align: center; color: #333; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                </style>
+            </head>
+            <body>
+                <h1>Traffic Analysis Report</h1>
+                <p>Generated on: ${new Date().toLocaleString()}</p>
+                <table>
+                    ${tableRows}
+                </table>
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        return URL.createObjectURL(blob);
     }
 
     function showImageResults(data) {
@@ -271,6 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Badge styling
         congestionBadge.innerText = data.congestion_level;
         congestionBadge.className = 'badge ' + data.congestion_level.toLowerCase();
+        
+        downloadReportBtn.href = generateReport(data, 'image');
+        downloadReportBtn.classList.remove('hidden');
     }
 
     function getDominantCongestion(congestionCounts) {
@@ -312,6 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         congestionBadge.innerText = dominantCongestion;
         congestionBadge.className = 'badge ' + dominantCongestion.toLowerCase();
+        
+        data.congestion_level = dominantCongestion;
+        downloadReportBtn.href = generateReport(data, 'video');
+        downloadReportBtn.classList.remove('hidden');
     }
     let wsDetect = null;
     let isWaitingForResponse = false;

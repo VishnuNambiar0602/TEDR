@@ -112,10 +112,82 @@ def get_git_info():
     except Exception as e:
         return f"Error getting git status: {e}", f"Error getting git log: {e}"
 
+import queue
+
+class ThreadedVideoReader:
+    def __init__(self, video_path, queue_size=128):
+        self.cap = cv2.VideoCapture(video_path)
+        self.Q = queue.Queue(maxsize=queue_size)
+        self.stopped = False
+        self.thread = threading.Thread(target=self.update, args=())
+        self.thread.daemon = True
+
+    def start(self):
+        self.thread.start()
+        return self
+
+    def update(self):
+        while not self.stopped:
+            ret, frame = self.cap.read()
+            if not ret:
+                break
+            self.Q.put(frame)
+        self.stopped = True
+        self.cap.release()
+
+    def read(self):
+        if self.Q.empty() and self.stopped:
+            return None
+        try:
+            return self.Q.get(timeout=1.0)
+        except queue.Empty:
+            return None
+
+    def isOpened(self):
+        return self.cap.isOpened() or not self.Q.empty()
+
+    def release(self):
+        self.stopped = True
+        if self.thread.is_alive():
+            self.thread.join()
+
+class ThreadedVideoWriter:
+    def __init__(self, output_path, fourcc, fps, size, queue_size=128):
+        self.writer = cv2.VideoWriter(output_path, fourcc, fps, size)
+        self.Q = queue.Queue(maxsize=queue_size)
+        self.stopped = False
+        self.thread = threading.Thread(target=self.update, args=())
+        self.thread.daemon = True
+
+    def start(self):
+        self.thread.start()
+        return self
+
+    def update(self):
+        while not self.stopped or not self.Q.empty():
+            try:
+                frame = self.Q.get(timeout=0.05)
+                self.writer.write(frame)
+                self.Q.task_done()
+            except queue.Empty:
+                continue
+        self.writer.release()
+
+    def write(self, frame):
+        self.Q.put(frame)
+
+    def release(self):
+        self.stopped = True
+        if self.thread.is_alive():
+            self.thread.join()
+
 def main():
     video_path = r"C:\Users\vishn\Downloads\videoplayback (1).mp4"
     if not os.path.exists(video_path):
-        print(f"Error: {video_path} not found!")
+        print(f"Warning: {video_path} not found. Trying project root 'test_video.mp4'...")
+        video_path = os.path.join(project_root, "test_video.mp4")
+    if not os.path.exists(video_path):
+        print(f"Error: No video file found at {video_path}!")
         sys.exit(1)
 
     print("Initializing TrafficAnalyzer...")
@@ -141,23 +213,25 @@ def main():
     print(f"Starting frame-by-frame analysis of: {video_path}...")
     start_time = time.time()
     
-    cap = cv2.VideoCapture(video_path)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps_in = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    cap_temp = cv2.VideoCapture(video_path)
+    total_frames = int(cap_temp.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps_in = cap_temp.get(cv2.CAP_PROP_FPS)
+    width = int(cap_temp.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap_temp.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    cap_temp.release()
     
     output_dir = os.path.join(project_root, "temp", "processed")
     os.makedirs(output_dir, exist_ok=True)
     output_name = "processed_eval_video.mp4"
     output_path = os.path.join(output_dir, output_name)
     
-    writer = cv2.VideoWriter(
+    reader = ThreadedVideoReader(video_path).start()
+    writer = ThreadedVideoWriter(
         output_path,
         cv2.VideoWriter_fourcc(*"mp4v"),
         fps_in if fps_in > 0 else 24.0,
         (width, height)
-    )
+    ).start()
     
     frame_index = 0
     analyzed_frames = 0
@@ -168,9 +242,9 @@ def main():
     last_print_time = time.time()
     
     try:
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
+        while True:
+            frame = reader.read()
+            if frame is None:
                 break
                 
             frame_index += 1
@@ -193,10 +267,12 @@ def main():
                 
         success = True
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Error during video processing: {e}")
         success = False
         
-    cap.release()
+    reader.release()
     writer.release()
     
     end_time = time.time()
@@ -312,11 +388,11 @@ def main():
         
     report_content = "\n".join(report)
     
-    # Save to logs.md in UTF-8
-    with open(os.path.join(project_root, "logs.md"), "w", encoding="utf-8") as f_log:
+    # Save to logs4.md in UTF-8
+    with open(os.path.join(project_root, "logs4.md"), "w", encoding="utf-8") as f_log:
         f_log.write(report_content)
         
-    print("\nPerformance logs successfully saved to logs.md")
+    print("\nPerformance logs successfully saved to logs4.md")
 
 if __name__ == "__main__":
     main()
