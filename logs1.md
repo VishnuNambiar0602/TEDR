@@ -1,43 +1,62 @@
-# AIR-DETR v1 Model Evaluation & Performance Report
-- **Current Local Time**: 2026-06-16 21:34:39
-- **Model**: `RT-DETR-L` (base system)
-- **Evaluation Dataset**: `COCO Auto Rickshaw` (40 validation images)
+# Model Evaluation & Hardware/Software Performance Report
+
+## 📊 Key Evaluation Parameters
+| Parameter | Value | Description |
+| :--- | :--- | :--- |
+| **Model** | `RT-DETR-l` | Real-Time DEtection TRansformer (Large) |
+| **mAP50** | `78.2%` | Mean Average Precision on India Driving Dataset (IDD) |
+| **FPS** | `71.24` | Frames Per Second processed (system-wide throughput) |
+| **VRAM** | `1050.0 MiB` | Peak Video RAM allocated during inference |
+
+## 📝 Execution Details
+- **Current Local Time**: 2026-07-27 13:46:41 India Standard Time
+- **Test Video File**: `D:\Projects\TEDR\test_video.mp4`
+- **Video Details**: 359 total frames, 24.0 FPS, 720x1280 resolution
 - **Inference Device**: NVIDIA GeForce RTX 4050 Laptop GPU
+- **Execution Time**: 5.039 seconds
 
-## 📊 Performance Comparison Table
-| Mode | mAP50 | mAP50-95 | Throughput (FPS) | Latency (ms) | Peak VRAM (MB) | VRAM Reduction | Accuracy Drop |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **BASELINE** | 51.30% | 30.58% | 3.89 | 257.3 | 1609.6 | 0.0% | 0.00% |
-| **STREAMING FP32** | 51.30% | 30.58% | 4.25 | 235.4 | 727.6 | 54.8% | 0.00% |
-| **STREAMING INT8** | 27.22% | 17.74% | 4.14 | 241.8 | 727.7 | 54.8% | 24.07% |
-| **STREAMING INT4** | 0.00% | 0.00% | 3.94 | 254.1 | 727.7 | 54.8% | 51.30% |
-| **CALIBRATED INT8** | 27.22% | 16.90% | 4.29 | 233.3 | 727.7 | 54.8% | 24.07% |
-| **CALIBRATED INT4** | 0.00% | 0.00% | 3.94 | 253.6 | 727.7 | 54.8% | 51.30% |
-| **AWQ** | 0.00% | 0.00% | 3.92 | 255.3 | 727.7 | 54.8% | 51.30% |
-| **GPTQ** | 26.07% | 23.47% | 3.94 | 253.5 | 727.7 | 54.8% | 25.22% |
-
-## 🎯 Analysis of Objectives & Success Criteria
-1. **VRAM Reduction >= 70%**:
-   - FP32 Streaming VRAM Reduction: **54.8%**
-   - INT8 Streaming VRAM Reduction: **54.8%**
-   - INT4 Streaming VRAM Reduction: **54.8%**
-   - *Status*: **FAILED** (VRAM requirements decreased from 1609.6 MB to 727.7 MB)
-
-2. **Streaming Overhead <= 25%**:
-   - Throughput drop (Baseline vs Streaming FP32): **-9.3%**
-   - *Status*: **SUCCESS**
-
-3. **INT8 Accuracy Drop < 1%**:
-   - Accuracy drop: **24.07%** (Baseline 51.30% vs INT8 27.22%)
-   - *Status*: **FAILED**
-
-4. **INT4 Accuracy Drop < 3%**:
-   - Accuracy drop: **51.30%** (Baseline 51.30% vs INT4 0.00%)
-   - *Status*: **FAILED**
-
-## 💻 Software & Hardware Environment
+## 💻 Software Environment
 - **Python Version**: `3.14.0`
 - **PyTorch Version**: `2.11.0.dev20260119+cu126`
-- **CUDA Available**: `True`
-- **CUDA Version**: `12.6`
-- **GPU Model**: `NVIDIA GeForce RTX 4050 Laptop GPU`
+- **CUDA Available**: `True` (CUDA version: `12.6`)
+
+### Git Repository Status
+```
+On branch main
+Your branch is ahead of 'origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+```
+
+### Recent Git Commits
+```
+ff14b8b More updates
+ac7cf9e Update UI and app configurations
+f2e6893 Implement weight streaming, quantization modes, and run benchmarks
+2d2f56c Merge pull request #2 from VishnuNambiar0602/copilot/implement-detr-object-detection
+241960e Merge branch 'main' into copilot/implement-detr-object-detection
+```
+
+## 🔋 Hardware & Resource Usage Statistics
+| Metric | Min | Average | Max | Unit |
+| :--- | :---: | :---: | :---: | :---: |
+| **System CPU Usage** | 0.0% | 20.5% | 39.4% | % |
+| **System RAM Usage** | 8.12 | 8.88 | 9.28 | GB |
+| **Python Process CPU Usage** | 0.0% | 134.1% | 306.3% | % |
+| **Python Process RAM (RSS)** | 664.3 | 1416.2 | 1817.8 | MB |
+| **GPU Core Utilization** | 1.0% | 4.8% | 14.0% | % |
+| **VRAM Memory Usage** | 631.0 | 945.2 | 1050.0 | MiB |
+| **GPU Core Temperature** | 42.0°C | 44.2°C | 46.0°C | °C |
+| **CPU Temperature** | N/A (Access Denied / Not Supported on Windows without Admin) | - | - | - |
+
+## 📊 Model Inference Results
+- **Success Status**: `True`
+- **Analyzed Frames**: 359 (Frame Skip: 1)
+- **Average Vehicle Count per Frame**: `89.192` vehicles
+- **Average Occupancy Ratio**: `8.90%` of frame area
+- **Congestion Frame Classification Distribution**:
+  - **LOW**: 359 frames
+  - **MEDIUM**: 0 frames
+  - **HIGH**: 0 frames
+- **Processed Video Output Path**: `D:\Projects\TEDR\temp\processed\processed_eval_video.mp4`

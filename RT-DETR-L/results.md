@@ -1,5 +1,5 @@
 # AIR-DETR Model Evaluation & Performance Report: rtdetr-l.pt
-- **Current Local Time**: 2026-06-16 21:43:10
+- **Current Local Time**: 2026-07-27 13:55:19
 - **Model**: `rtdetr-l.pt`
 - **Evaluation Dataset**: `DriveIndia Public Dataset` (500 validation images)
 - **Inference Device**: NVIDIA GeForce RTX 4050 Laptop GPU
@@ -7,8 +7,8 @@
 ## 📊 Performance Comparison Table
 | Mode | mAP50 | mAP50-95 | Throughput (FPS) | Latency (ms) | Peak VRAM (MB) | VRAM Reduction | Accuracy Drop |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **BASELINE** | 51.30% | 30.58% | 3.52 | 284.4 | 1609.6 | 0.0% | 0.00% |
-| **STREAMING FP32** | 51.30% | 30.58% | 4.21 | 237.4 | 727.6 | 54.8% | 0.00% |
+| **BASELINE** | 51.30% | 30.58% | 3.07 | 325.5 | 1609.6 | 0.0% | 0.00% |
+| **STREAMING FP32** | 51.30% | 30.58% | 3.56 | 281.0 | 727.6 | 54.8% | 0.00% |
 
 ## 🎯 Analysis of Objectives & Success Criteria
 1. **VRAM Reduction >= 50%**:
@@ -16,7 +16,7 @@
    - *Status*: **SUCCESS** (VRAM requirements decreased from 1609.6 MB to 727.6 MB)
 
 2. **Streaming Overhead <= 25%**:
-   - Throughput drop (Baseline vs Streaming FP32): **-19.8%**
+   - Throughput drop (Baseline vs Streaming FP32): **-15.8%**
    - *Status*: **SUCCESS**
 
 ## 💻 Software & Hardware Environment

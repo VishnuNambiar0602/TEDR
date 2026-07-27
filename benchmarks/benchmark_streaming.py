@@ -301,6 +301,7 @@ def generate_markdown_report(results, out_dir, model_name):
     report.append(f"   - *Status*: **{'SUCCESS' if fp32_vram_red >= 50 else 'FAILED'}** (VRAM requirements decreased from {base_vram:.1f} MB to {results['streaming_fp32']['peak_vram_mb']:.1f} MB)")
     report.append("")
     
+    overhead = (1 - results["streaming_fp32"]["fps"] / results["baseline"]["fps"]) * 100 if results["baseline"]["fps"] > 0 else 0
     report.append(f"2. **Streaming Overhead <= 25%**:")
     report.append(f"   - Throughput drop (Baseline vs Streaming FP32): **{overhead:.1f}%**")
     report.append(f"   - *Status*: **{'SUCCESS' if overhead <= 25 else 'FAILED'}**")

@@ -5,15 +5,15 @@
 | :--- | :--- | :--- |
 | **Model** | `RT-DETR-l` | Real-Time DEtection TRansformer (Large) |
 | **mAP50** | `78.2%` | Mean Average Precision on India Driving Dataset (IDD) |
-| **FPS** | `98.23` | Frames Per Second processed (system-wide throughput) |
-| **VRAM** | `1034.0 MiB` | Peak Video RAM allocated during inference |
+| **FPS** | `71.24` | Frames Per Second processed (system-wide throughput) |
+| **VRAM** | `1050.0 MiB` | Peak Video RAM allocated during inference |
 
 ## 📝 Execution Details
-- **Current Local Time**: 2026-06-18 22:23:25 India Standard Time
+- **Current Local Time**: 2026-07-27 13:46:41 India Standard Time
 - **Test Video File**: `D:\Projects\TEDR\test_video.mp4`
 - **Video Details**: 359 total frames, 24.0 FPS, 720x1280 resolution
 - **Inference Device**: NVIDIA GeForce RTX 4050 Laptop GPU
-- **Execution Time**: 3.655 seconds
+- **Execution Time**: 5.039 seconds
 
 ## 💻 Software Environment
 - **Python Version**: `3.14.0`
@@ -23,48 +23,31 @@
 ### Git Repository Status
 ```
 On branch main
-Your branch is up to date with 'origin/main'.
+Your branch is ahead of 'origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
 
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   analyzer.py
-	modified:   app.py
-	modified:   scripts/evaluate_custom_video.py
-
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	New Text Document.txt
-	logs3.md
-	pure_RT-DETR/
-	rtdetr-l.engine
-	rtdetr-l.onnx
-	temp_test.avi
-	temp_test.mp4
-	visualise.html
-
-no changes added to commit (use "git add" and/or "git commit -a")
+nothing to commit, working tree clean
 ```
 
 ### Recent Git Commits
 ```
+ff14b8b More updates
+ac7cf9e Update UI and app configurations
 f2e6893 Implement weight streaming, quantization modes, and run benchmarks
 2d2f56c Merge pull request #2 from VishnuNambiar0602/copilot/implement-detr-object-detection
 241960e Merge branch 'main' into copilot/implement-detr-object-detection
-02d8f66 Merge pull request #1 from VishnuNambiar0602/copilot/create-detr-object-detection
-2049820 Add final validation checklist - all requirements complete
 ```
 
 ## 🔋 Hardware & Resource Usage Statistics
 | Metric | Min | Average | Max | Unit |
 | :--- | :---: | :---: | :---: | :---: |
-| **System CPU Usage** | 0.0% | 21.3% | 33.9% | % |
-| **System RAM Usage** | 8.56 | 9.28 | 9.68 | GB |
-| **Python Process CPU Usage** | 0.0% | 157.1% | 266.1% | % |
-| **Python Process RAM (RSS)** | 650.1 | 1387.9 | 1811.8 | MB |
-| **GPU Core Utilization** | 0.0% | 4.0% | 15.0% | % |
-| **VRAM Memory Usage** | 618.0 | 930.0 | 1034.0 | MiB |
-| **GPU Core Temperature** | 42.0°C | 44.8°C | 48.0°C | °C |
+| **System CPU Usage** | 0.0% | 20.5% | 39.4% | % |
+| **System RAM Usage** | 8.12 | 8.88 | 9.28 | GB |
+| **Python Process CPU Usage** | 0.0% | 134.1% | 306.3% | % |
+| **Python Process RAM (RSS)** | 664.3 | 1416.2 | 1817.8 | MB |
+| **GPU Core Utilization** | 1.0% | 4.8% | 14.0% | % |
+| **VRAM Memory Usage** | 631.0 | 945.2 | 1050.0 | MiB |
+| **GPU Core Temperature** | 42.0°C | 44.2°C | 46.0°C | °C |
 | **CPU Temperature** | N/A (Access Denied / Not Supported on Windows without Admin) | - | - | - |
 
 ## 📊 Model Inference Results
