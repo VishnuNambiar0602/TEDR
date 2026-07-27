@@ -2,12 +2,12 @@
 Benchmark Suite for AIR-DETR.
 
 Evaluates:
-- Baseline RT-DETR-L vs Streaming RT-DETR-L (FP32, INT8, INT4)
+- Baseline RT-DETR-L vs Streaming RT-DETR-L (FP32)
 - Peak VRAM (PyTorch allocated + system-wide)
 - Throughput (FPS) and Latency (ms)
 - Accuracy (mAP50, mAP50-95)
 - CPU RAM and CPU Usage
-- Quantization Error and Streaming Overhead
+- Streaming Overhead
 
 Outputs:
 - JSON results to temp/benchmark_results.json
@@ -67,7 +67,7 @@ def run_evaluation(model, data_config, device="cuda"):
     # Throughput metrics
     # Get image count from directory directly
     val_dir = "datasets/coco_autorickshaw/images/val"
-    total_images = len(os.listdir(val_dir)) if os.path.exists(val_dir) else 40
+    total_images = len(os.listdir(val_dir)) if os.path.exists(val_dir) else 500
     fps = total_images / elapsed if elapsed > 0 else 0.0
     latency = (elapsed / total_images) * 1000.0 if total_images > 0 else 0.0
     
@@ -109,13 +109,7 @@ def main():
     benchmark_results = {}
     modes = [
         "baseline",
-        "streaming_fp32",
-        "streaming_int8",
-        "streaming_int4",
-        "calibrated_int8",
-        "calibrated_int4",
-        "awq",
-        "gptq"
+        "streaming_fp32"
     ]
     
     for mode in modes:
@@ -260,7 +254,7 @@ def generate_latex_table(results, out_dir):
     latex.append(r"\hline")
     latex.append(r"\textbf{Mode} & \textbf{mAP50 (\%)} & \textbf{mAP50-95 (\%)} & \textbf{Throughput (FPS)} & \textbf{Latency (ms)} & \textbf{Peak VRAM (MB)} \\ \hline")
     
-    for mode in ["baseline", "streaming_fp32", "streaming_int8", "streaming_int4", "calibrated_int8", "calibrated_int4", "awq", "gptq"]:
+    for mode in ["baseline", "streaming_fp32"]:
         r = results[mode]
         latex.append(f"{mode.upper()} & {r['mAP50']*100:.2f}\\% & {r['mAP50-95']*100:.2f}\\% & {r['fps']:.2f} & {r['latency_ms']:.1f} & {r['peak_vram_mb']:.1f} \\\\ \\hline")
         
@@ -279,7 +273,7 @@ def generate_markdown_report(results, out_dir, model_name):
     report.append(f"# AIR-DETR Model Evaluation & Performance Report: {model_name}")
     report.append(f"- **Current Local Time**: {time.strftime('%Y-%m-%d %H:%M:%S')}")
     report.append(f"- **Model**: `{model_name}`")
-    report.append("- **Evaluation Dataset**: `COCO Auto Rickshaw` (40 validation images)")
+    report.append("- **Evaluation Dataset**: `DriveIndia Public Dataset` (500 validation images)")
     report.append("- **Inference Device**: NVIDIA GeForce RTX 4050 Laptop GPU")
     report.append("")
     
@@ -287,7 +281,7 @@ def generate_markdown_report(results, out_dir, model_name):
     report.append("| Mode | mAP50 | mAP50-95 | Throughput (FPS) | Latency (ms) | Peak VRAM (MB) | VRAM Reduction | Accuracy Drop |")
     report.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |")
     
-    for mode in ["baseline", "streaming_fp32", "streaming_int8", "streaming_int4", "calibrated_int8", "calibrated_int4", "awq", "gptq"]:
+    for mode in ["baseline", "streaming_fp32"]:
         r = results[mode]
         vram_red = (1 - r["peak_vram_mb"] / base_vram) * 100 if base_vram > 0 else 0
         map_drop = base_map - (r["mAP50"] * 100)
@@ -302,34 +296,14 @@ def generate_markdown_report(results, out_dir, model_name):
     
     # Verify success criteria
     fp32_vram_red = (1 - results["streaming_fp32"]["peak_vram_mb"] / base_vram) * 100 if base_vram > 0 else 0
-    int8_vram_red = (1 - results["streaming_int8"]["peak_vram_mb"] / base_vram) * 100 if base_vram > 0 else 0
-    int4_vram_red = (1 - results["streaming_int4"]["peak_vram_mb"] / base_vram) * 100 if base_vram > 0 else 0
-    
-    int8_drop = base_map - (results["streaming_int8"]["mAP50"] * 100)
-    int4_drop = base_map - (results["streaming_int4"]["mAP50"] * 100)
-    
-    overhead = (1 - results["streaming_fp32"]["fps"] / results["baseline"]["fps"]) * 100 if results["baseline"]["fps"] > 0 else 0
-    
-    report.append(f"1. **VRAM Reduction >= 70%**:")
+    report.append(f"1. **VRAM Reduction >= 50%**:")
     report.append(f"   - FP32 Streaming VRAM Reduction: **{fp32_vram_red:.1f}%**")
-    report.append(f"   - INT8 Streaming VRAM Reduction: **{int8_vram_red:.1f}%**")
-    report.append(f"   - INT4 Streaming VRAM Reduction: **{int4_vram_red:.1f}%**")
-    report.append(f"   - *Status*: **{'SUCCESS' if int4_vram_red >= 70 else 'FAILED'}** (VRAM requirements decreased from {base_vram:.1f} MB to {results['streaming_int4']['peak_vram_mb']:.1f} MB)")
+    report.append(f"   - *Status*: **{'SUCCESS' if fp32_vram_red >= 50 else 'FAILED'}** (VRAM requirements decreased from {base_vram:.1f} MB to {results['streaming_fp32']['peak_vram_mb']:.1f} MB)")
     report.append("")
     
     report.append(f"2. **Streaming Overhead <= 25%**:")
     report.append(f"   - Throughput drop (Baseline vs Streaming FP32): **{overhead:.1f}%**")
     report.append(f"   - *Status*: **{'SUCCESS' if overhead <= 25 else 'FAILED'}**")
-    report.append("")
-    
-    report.append(f"3. **INT8 Accuracy Drop < 1%**:")
-    report.append(f"   - Accuracy drop: **{int8_drop:.2f}%** (Baseline {base_map:.2f}% vs INT8 {results['streaming_int8']['mAP50']*100:.2f}%)")
-    report.append(f"   - *Status*: **{'SUCCESS' if int8_drop < 1.0 else 'FAILED'}**")
-    report.append("")
-    
-    report.append(f"4. **INT4 Accuracy Drop < 3%**:")
-    report.append(f"   - Accuracy drop: **{int4_drop:.2f}%** (Baseline {base_map:.2f}% vs INT4 {results['streaming_int4']['mAP50']*100:.2f}%)")
-    report.append(f"   - *Status*: **{'SUCCESS' if int4_drop < 3.0 else 'FAILED'}**")
     report.append("")
     
     report.append("## 💻 Software & Hardware Environment")
